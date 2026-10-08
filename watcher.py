@@ -2,8 +2,9 @@
 """stina「innocent bordeaux」柄の新着をメルカリ・ラクマで監視してメールで通知する。
 
 判定:
-  強一致  タイトル/説明に柄名・型名 (innocent, juliet, ボルドー など) を含む
-  候補    stina のレオタードで、サムネイルの配色 (ボルドー地 + 青白の花) が近い
+  強一致  タイトルに柄名 (innocent, ボルドー など) を含む
+  型一致  type J juliet で、配色もある程度近い
+  候補    stina のレオタードで、サムネイルの配色 (ボルドー地 + 青い花) が近い
 既読の商品IDは seen.json に保存し、同じ商品は二度通知しない。
 
 環境変数:
@@ -139,7 +140,7 @@ def search_rakuma(keyword: str):
 
 # ---------------- 判定 ----------------
 def pattern_score(img: Image.Image) -> float:
-    """ボルドー地の割合と、青〜白の花の割合から 0〜1 のスコアを出す。"""
+    """ボルドー地の割合と、青い花の割合から 0〜1 のスコアを出す。"""
     w, h = img.size
     img = img.convert("RGB").crop((int(w * .2), int(h * .2), int(w * .8), int(h * .8)))
     x = np.asarray(img.resize((96, 96)), dtype=np.float32) / 255.0
@@ -155,16 +156,18 @@ def pattern_score(img: Image.Image) -> float:
     hue[bm] = (r - g)[bm] / d[bm] + 4
     hue *= 60
     wine = ((hue >= 270) | (hue <= 20)) & (s > 0.12) & (v > 0.06) & (v < 0.45)
-    flower = (((hue >= 190) & (hue < 290) & (s > 0.06) & (v > 0.35)) |
-              ((s < 0.12) & (v > 0.55) & (v < 0.95)))
-    a = min(wine.mean() / 0.15, 1.0)
-    bfl = min(flower.mean() / 0.10, 1.0)
+    # 花の青〜ラベンダー。白は背景の壁や床と区別できないので数えない
+    blue = (hue >= 200) & (hue < 290) & (s > 0.10) & (v > 0.30)
+    a = min(wine.mean() / 0.08, 1.0)
+    bfl = min(blue.mean() / 0.10, 1.0)
     return float(np.sqrt(a * bfl))
 
 
 def classify(item):
     t = item["title"].lower()
     if not any(k.lower() in t for k in CONFIG["must_any"]):
+        return None, 0.0
+    if not any(k.lower() in t for k in CONFIG["item_any"]):
         return None, 0.0
     if any(k.lower() in t for k in CONFIG["exclude"]):
         return None, 0.0
@@ -180,6 +183,9 @@ def classify(item):
             print(f"thumb error {item['url']}: {e}", file=sys.stderr)
     if score >= CONFIG["color_threshold"]:
         return "候補", score
+    # 型（type J juliet）が同じなら配色の条件をゆるめる
+    if any(k.lower() in t for k in CONFIG["shape_keywords"]) and score >= CONFIG["shape_color_threshold"]:
+        return "型一致", score
     return None, score
 
 
@@ -188,7 +194,7 @@ def send_mail(hits):
     """hits: [(item, label, score)] を1通のメールにまとめて送る。"""
     lines, html = [], []
     for it, label, score in hits:
-        extra = f"（配色スコア {score:.2f}）" if label == "候補" else ""
+        extra = f"（配色スコア {score:.2f}）" if label != "強一致" else ""
         lines.append(f"[{label}] {it['site']} ¥{it['price']:,} {it['title']}{extra}\n{it['url']}")
         img = f'<img src="{escape(it["thumb"])}" width="240"><br>' if it["thumb"] else ""
         html.append(f'<p><b>[{label}] {escape(it["site"])} ¥{it["price"]:,}</b>{escape(extra)}<br>'
@@ -212,6 +218,9 @@ def send_mail(hits):
 def main():
     seen = set(json.loads(SEEN_PATH.read_text())) if SEEN_PATH.exists() else set()
     seed = bool(os.environ.get("SEED")) or not SEEN_PATH.exists()
+    evaluate = bool(os.environ.get("EVALUATE"))  # 既読を無視して判定だけ表示する
+    if evaluate:
+        seen, seed = set(), True
     items, errors = {}, []
     for kw in CONFIG["keywords"]:
         for name, fn in (("mercari", search_mercari), ("rakuma", search_rakuma)):
@@ -237,7 +246,8 @@ def main():
     # 初回は今出ている分を既読にするだけ（一覧はログに残る）
     if hits and not seed:
         send_mail(hits)
-    SEEN_PATH.write_text(json.dumps(sorted(seen | set(items)), ensure_ascii=False, indent=0))
+    if not evaluate:
+        SEEN_PATH.write_text(json.dumps(sorted(seen | set(items)), ensure_ascii=False, indent=0))
     # 両サイトとも全滅なら失敗扱いにして気づけるようにする
     if errors and not items:
         sys.exit(1)

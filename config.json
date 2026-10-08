@@ -1,7 +1,51 @@
 {
-  "keywords": ["stina レオタード", "スティナ レオタード", "stina innocent", "stina juliet"],
-  "must_any": ["stina", "スティナ"],
-  "exclude": ["スカート", "パンツ", "ポーチ", "キーホルダー", "kids", "キッズ", "jr.", "ジュニア", "110", "120", "130"],
-  "strong_keywords": ["innocent", "イノセント", "bordeaux", "ボルドー", "juliet", "ジュリエット", "type j", "typej", "タイプj"],
-  "color_threshold": 0.55
+  "keywords": [
+    "stina レオタード",
+    "スティナ レオタード",
+    "stina innocent",
+    "stina juliet"
+  ],
+  "must_any": [
+    "stina",
+    "スティナ"
+  ],
+  "item_any": [
+    "レオタード",
+    "leotard",
+    "type"
+  ],
+  "exclude": [
+    "スカート",
+    "パンツ",
+    "ポーチ",
+    "キーホルダー",
+    "kids",
+    "キッズ",
+    "jr.",
+    "ジュニア",
+    "110",
+    "120",
+    "130",
+    "closet",
+    "クローゼット",
+    "マスク",
+    "cd",
+    "素材",
+    "はぎれ"
+  ],
+  "strong_keywords": [
+    "innocent",
+    "イノセント",
+    "bordeaux",
+    "ボルドー"
+  ],
+  "color_threshold": 0.8,
+  "shape_keywords": [
+    "juliet",
+    "ジュリエット",
+    "type j",
+    "typej",
+    "タイプj"
+  ],
+  "shape_color_threshold": 0.5
 }
