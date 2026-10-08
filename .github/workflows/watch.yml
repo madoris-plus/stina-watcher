@@ -8,6 +8,10 @@ on:
         description: "既読を無視して判定結果だけ表示（メール・保存なし）"
         type: boolean
         default: false
+      test_mail:
+        description: "テストメールを1通送るだけ"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency: stina-watch
@@ -28,6 +32,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           EVALUATE: ${{ inputs.evaluate && '1' || '' }}
+          TEST_MAIL: ${{ inputs.test_mail && '1' || '' }}
       - name: 既読リストを保存
         run: |
           git config user.name "stina-watcher"

@@ -216,6 +216,11 @@ def send_mail(hits):
 
 
 def main():
+    if os.environ.get("TEST_MAIL"):
+        send_mail([({"site": "テスト", "price": 0, "title": "stina-watcher のテスト送信です",
+                     "url": "https://github.com/madoris-plus/stina-watcher", "thumb": None}, "強一致", 1.0)])
+        print("テストメールを送信しました")
+        return
     seen = set(json.loads(SEEN_PATH.read_text())) if SEEN_PATH.exists() else set()
     seed = bool(os.environ.get("SEED")) or not SEEN_PATH.exists()
     evaluate = bool(os.environ.get("EVALUATE"))  # 既読を無視して判定だけ表示する
