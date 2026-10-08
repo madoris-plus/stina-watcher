@@ -1,0 +1,7 @@
+{
+  "keywords": ["stina レオタード", "スティナ レオタード", "stina innocent", "stina juliet"],
+  "must_any": ["stina", "スティナ"],
+  "exclude": ["スカート", "パンツ", "ポーチ", "キーホルダー", "kids", "キッズ", "jr.", "ジュニア", "110", "120", "130"],
+  "strong_keywords": ["innocent", "イノセント", "bordeaux", "ボルドー", "juliet", "ジュリエット", "type j", "typej", "タイプj"],
+  "color_threshold": 0.55
+}

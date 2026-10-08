@@ -1,0 +1,30 @@
+name: stina-watch
+on:
+  schedule:
+    - cron: "*/20 * * * *"   # 20分ごと（GitHub側の混雑で数分遅れることがある）
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: stina-watch
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python watcher.py
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+      - name: 既読リストを保存
+        run: |
+          git config user.name "stina-watcher"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen.json
+          git diff --cached --quiet || { git commit -m "update seen" && git push; }
