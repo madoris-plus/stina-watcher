@@ -228,14 +228,14 @@ def main():
     print(f"取得 {len(items)} 件 / 新着 {len(new)} 件" + (" (初回: 通知なしで既読化)" if seed else ""))
     hits = []
     for it in new:
-        if seed and not os.environ.get("DRY_RUN"):
-            continue
         label, score = classify(it)
         if label:
             hits.append((it, label, score))
+            print(f"  {label} {score:.2f} {it['site']} {it['title']} {it['url']}")
         elif os.environ.get("DRY_RUN"):
             print(f"  skip {score:.2f} {it['site']} {it['title']}")
-    if hits:
+    # 初回は今出ている分を既読にするだけ（一覧はログに残る）
+    if hits and not seed:
         send_mail(hits)
     SEEN_PATH.write_text(json.dumps(sorted(seen | set(items)), ensure_ascii=False, indent=0))
     # 両サイトとも全滅なら失敗扱いにして気づけるようにする
