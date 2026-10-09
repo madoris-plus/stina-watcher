@@ -1,7 +1,7 @@
 name: stina-watch
 on:
   schedule:
-    - cron: "7,27,47 * * * *"   # 20分ごと。毎時0分台は混雑で落ちやすいのでずらす
+    - cron: "8,28,48 * * * *"   # 20分ごと。毎時0分台は混雑で落ちやすいのでずらす
   workflow_dispatch:
     inputs:
       evaluate:
